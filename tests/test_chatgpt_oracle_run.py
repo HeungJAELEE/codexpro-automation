@@ -965,6 +965,37 @@ def test_version_resolution_timeout_is_proven_pre_submit_and_releases_project(tm
     ) == []
 
 
+def test_missing_compatibility_patch_is_proven_pre_submit_and_releases_project(
+    tmp_path: Path,
+) -> None:
+    runner = load_runner()
+    calls: list[bool] = []
+
+    def missing_patch(_version: str) -> dict:
+        raise runner.COMPAT.OracleCompatError(
+            "ORACLE_COMPAT_PATCH_MISSING",
+            "A required Oracle compatibility patch is missing",
+            {"missing": ["assistantResponse.patch"]},
+        )
+
+    result = execute_run(
+        runner,
+        manifest(tmp_path, run_id="f" * 32),
+        run_factory=version_runner,
+        compat_factory=missing_patch,
+        popen_factory=lambda *args, **kwargs: calls.append(True),
+    )
+    run_dir = Path(result["run_dir"])
+    state = runner.STATE.load_state(run_dir / "state.json")
+
+    assert result["status"] == "pre_submit_failed"
+    assert result["safe_for_fresh_run"] is True
+    assert state["session_authority"] == "pre_submit"
+    assert state["transport_status"] == "failed_pre_submit"
+    assert state["pre_submit_failure"]["failure_reason"] == "compatibility-artifact-missing"
+    assert calls == []
+
+
 def test_recovery_repairs_legacy_version_timeout_authority_without_oracle_call(tmp_path: Path) -> None:
     runner = load_runner()
     initial = execute_run(

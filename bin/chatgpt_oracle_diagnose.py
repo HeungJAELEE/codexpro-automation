@@ -145,6 +145,8 @@ def classify_run(
             "signature": (
                 "oracle-version-resolution-prelaunch-compatibility-drift"
                 if host_failure.get("failure_reason") == "compatibility-version-drift"
+                else "oracle-version-resolution-prelaunch-compatibility-artifact-missing"
+                if host_failure.get("failure_reason") == "compatibility-artifact-missing"
                 else "oracle-version-resolution-prelaunch-timeout"
             ),
         }

@@ -129,6 +129,24 @@ def patch_root() -> Path:
     return Path(__file__).resolve().parent / "oracle-compat" / SUPPORTED_VERSION
 
 
+def _validate_patch_inventory(patches: Path) -> None:
+    required = sorted(
+        {
+            filename
+            for contract in PATCHES.values()
+            for key in ("patch", "legacy_patch")
+            if isinstance((filename := contract.get(key)), str) and filename
+        }
+    )
+    missing = [filename for filename in required if not (patches / filename).is_file()]
+    if missing:
+        raise OracleCompatError(
+            "ORACLE_COMPAT_PATCH_MISSING",
+            "A required Oracle compatibility patch is missing",
+            {"patch_root": str(patches), "missing": missing},
+        )
+
+
 def _git_kwargs() -> dict[str, Any]:
     if os.name != "nt":
         return {}
@@ -212,8 +230,9 @@ def ensure_oracle_compatibility(
             "Oracle compatibility is validated only for the tested version",
             {"resolved": resolved_version, "supported": SUPPORTED_VERSION},
         )
-    roots = resolve_package_roots(version) if package_root is None else [package_root.expanduser().resolve(strict=True)]
     patches = patch_root()
+    _validate_patch_inventory(patches)
+    roots = resolve_package_roots(version) if package_root is None else [package_root.expanduser().resolve(strict=True)]
     backup = backup_root or (Path.home() / ".codex" / "state" / "oracle-compat-backups" / version)
     changed: list[str] = []
     already: list[str] = []

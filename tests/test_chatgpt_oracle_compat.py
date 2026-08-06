@@ -111,9 +111,48 @@ def test_unknown_oracle_version_or_file_hash_fails_closed(tmp_path: Path) -> Non
             "patched": digest(b"after\n"),
         }
     }
+    patches = tmp_path / "patches"
+    patches.mkdir()
+    (patches / "sample.patch").write_text("unused", encoding="utf-8")
+    compat.patch_root = lambda: patches
     with pytest.raises(compat.OracleCompatError) as mismatch:
         compat.ensure_oracle_compatibility("oracle 0.16.1", package_root=package)
     assert mismatch.value.code == "ORACLE_FILE_HASH_MISMATCH"
+
+
+def test_missing_required_patch_fails_before_package_mutation(tmp_path: Path) -> None:
+    compat = load_compat()
+    package = tmp_path / "package"
+    package.mkdir()
+    (package / "package.json").write_text(json.dumps({"version": "0.16.1"}), encoding="utf-8")
+    target = package / "sample.txt"
+    target.write_bytes(b"before\n")
+    patches = tmp_path / "patches"
+    patches.mkdir()
+    compat.PATCHES = {
+        "sample.txt": {
+            "patch": "sample.patch",
+            "pristine": digest(b"before\n"),
+            "patched": digest(b"after\n"),
+        }
+    }
+    compat.patch_root = lambda: patches
+    backup = tmp_path / "backup"
+
+    with pytest.raises(compat.OracleCompatError) as missing:
+        compat.ensure_oracle_compatibility(
+            "oracle 0.16.1",
+            package_root=package,
+            backup_root=backup,
+        )
+
+    assert missing.value.code == "ORACLE_COMPAT_PATCH_MISSING"
+    assert missing.value.evidence == {
+        "patch_root": str(patches),
+        "missing": ["sample.patch"],
+    }
+    assert target.read_bytes() == b"before\n"
+    assert not backup.exists()
 
 
 def test_all_matching_npx_cache_roots_are_patched_and_legacy_is_migrated(

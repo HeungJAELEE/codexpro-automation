@@ -639,7 +639,7 @@ def execute_run(
     except Exception as exc:
         code = (
             f"{exc.code}: "
-            if isinstance(exc, OracleRunError)
+            if isinstance(exc, (OracleRunError, COMPAT.OracleCompatError))
             else "ORACLE_VERSION_TIMEOUT: " if isinstance(exc, subprocess.TimeoutExpired) else ""
         )
         append_error(layout.stderr_path, f"version resolution failed: {code}{exc}")

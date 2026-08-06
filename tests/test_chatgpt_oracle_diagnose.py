@@ -322,6 +322,30 @@ def test_version_compatibility_drift_is_a_retry_safe_pre_submit_host_failure(tmp
     assert verdict["signature"] == "oracle-version-resolution-prelaunch-compatibility-drift"
 
 
+def test_missing_compatibility_patch_is_a_retry_safe_pre_submit_host_failure(tmp_path: Path) -> None:
+    module = load()
+    state_root = tmp_path / "oracle-state"
+    write_run(state_root, "e" * 8, status="failed")
+    run_dir = state_root / "projects" / "projectkey" / "runs" / ("e" * 8)
+    state_path = run_dir / "state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["oracle"] = {"resolved_version": "unresolved"}
+    state["session_authority"] = "pre_submit"
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    (run_dir / "stderr.log").write_text(
+        "version resolution failed: [Errno 2] No such file or directory: "
+        "'C:\\Users\\Example\\.codex\\bin\\oracle-compat\\0.16.1\\assistantResponse.patch'\n",
+        encoding="utf-8",
+    )
+
+    verdict = module.diagnose(state_root)["unresolved_runs"][0]
+
+    assert verdict["bucket"] == "pre-submit-host-environment"
+    assert verdict["signature"] == (
+        "oracle-version-resolution-prelaunch-compatibility-artifact-missing"
+    )
+
+
 def test_user_confirmed_no_submission_overrides_prompt_timeout_only_with_validated_proof() -> None:
     module = load()
     state = {

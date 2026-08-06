@@ -1427,6 +1427,7 @@ def proven_pre_submit_host_failure(state_path: Path) -> dict[str, Any] | None:
     except UnicodeDecodeError:
         return None
     normalized_error = stderr_text.lstrip()
+    normalized_error_casefold = normalized_error.casefold()
     if (
         str(state.get("transport") or "") == "pro-attachment-only"
         and "The following files exceed the 1 MB limit:" in normalized_error
@@ -1446,6 +1447,19 @@ def proven_pre_submit_host_failure(state_path: Path) -> dict[str, Any] | None:
         return None
     elif "Oracle compatibility is validated only for the tested version" in normalized_error:
         failure_reason = "compatibility-version-drift"
+        code = "ORACLE_VERSION_RESOLUTION_PRELAUNCH_FAILED"
+    elif (
+        "oracle_compat_patch_missing:" in normalized_error_casefold
+        or (
+            (
+                "[errno 2]" in normalized_error_casefold
+                or "no such file or directory" in normalized_error_casefold
+            )
+            and "oracle-compat" in normalized_error_casefold
+            and ".patch" in normalized_error_casefold
+        )
+    ):
+        failure_reason = "compatibility-artifact-missing"
         code = "ORACLE_VERSION_RESOLUTION_PRELAUNCH_FAILED"
     elif (
         "ORACLE_VERSION_TIMEOUT:" in normalized_error

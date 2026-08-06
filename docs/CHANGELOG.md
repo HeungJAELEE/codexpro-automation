@@ -5,6 +5,16 @@ README는 현재 제품의 목적과 사용법만 설명합니다. 구현 변경
 
 ## 현재 릴리스
 
+### Oracle 호환 패치 설치 무결성
+
+- Windows 전역 설치 manifest가 Oracle 호환 계층에 선언된 모든 패치 파일을
+  포함하는지 동적으로 검사합니다.
+- 필수 패치가 없으면 Oracle나 브라우저를 시작하기 전에
+  `ORACLE_COMPAT_PATCH_MISSING`으로 중단하고 설치 artifact 누락을 명확히
+  보고합니다.
+- 과거의 동일한 `FileNotFoundError` 실행도 제출 전 호스트 환경 실패로
+  재판정하므로 새 실행 안전성 판단이 모호한 `unclassified`에 머물지 않습니다.
+
 ### Oracle + DevSpace 단일 실행 경로
 
 - 일반 GPT, 계획, 검토, 수정, 지휘, 심층 리서치, 종합모드와 Web

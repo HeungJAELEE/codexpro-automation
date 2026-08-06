@@ -1,4 +1,6 @@
+import importlib.util
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
@@ -74,6 +76,30 @@ def test_manifest_covers_runtime_and_schemas() -> None:
         'skills/chatgpt-pro-browser/scripts/run_chatgpt_pro.py',
         'skills/chatgpt-pro-browser/scripts/run_pro_browser.py',
     } <= package_files
+
+
+def test_manifest_includes_every_declared_oracle_compatibility_patch() -> None:
+    module_path = ROOT / 'bin' / 'chatgpt_oracle_compat.py'
+    name = 'chatgpt_oracle_compat_release_packaging_test'
+    spec = importlib.util.spec_from_file_location(name, module_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+
+    manifest = json.loads((ROOT / 'install-manifest.json').read_text(encoding='utf-8'))
+    includes = set(manifest['include'])
+    required = {
+        f"bin/oracle-compat/{module.SUPPORTED_VERSION}/{filename}"
+        for contract in module.PATCHES.values()
+        for key in ('patch', 'legacy_patch')
+        if isinstance((filename := contract.get(key)), str) and filename
+    }
+
+    assert required <= includes, (
+        f"Oracle compatibility patches missing from install manifest: "
+        f"{sorted(required - includes)}"
+    )
 
 
 def test_quiescent_app_trace_fixtures_never_authorize_replacement_work() -> None:
