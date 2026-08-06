@@ -235,3 +235,39 @@ def test_luna_supervisor_is_explicit_monitor_record_only_with_bounded_web_remedi
     assert "Extra High" in value
     assert "LUNA_SUPERVISOR_MODEL_UNCONFIRMED" in value
     assert "allow_implicit_invocation: false" in metadata
+
+
+def test_luna_supervisor_bootstrap_accepts_bound_task_receipts_and_separates_efforts() -> None:
+    value = text(LUNA_SUPERVISOR)
+    assert "`create_thread`/`send_message_to_thread` receipt" in value
+    assert "`model: gpt-5.6-luna`" in value
+    assert "`thinking: high`" in value
+    assert "Visible `Extra High` applies\nonly to the Web GPT" in value
+    assert "Never require, infer, or report Luna as\n`Extra High`" in value
+
+
+def test_luna_supervisor_uses_working_tree_isolation_without_mutating_dirty_source() -> None:
+    value = text(LUNA_SUPERVISOR)
+    assert "`startingState: working-tree`" in value
+    assert (
+        "Never stash, reset, clean, commit, or otherwise mutate the original"
+        in value
+    )
+    assert "`LUNA_ISOLATED_TASK_REQUIRED`" in value
+    assert "update `project_root` to the actual\nisolated Git root" in value
+
+
+def test_luna_supervisor_auto_resolves_unambiguous_notion_targets() -> None:
+    value = text(LUNA_SUPERVISOR)
+    assert "a placeholder alone is not a blocker" in value
+    assert "exactly one Task and one connected\nReport" in value
+    assert "`Project / Area`" in value
+    assert "`NOTION_TARGETS_NEED_CONFIRMATION`" in value
+
+
+def test_luna_supervisor_prefers_current_oracle_patch_readback_over_stale_incident(
+) -> None:
+    value = text(LUNA_SUPERVISOR)
+    assert "assistantResponse.patch" in value
+    assert "missing-file incident from an earlier task" in value
+    assert "`RUNTIME_PREREQUISITE_CONFIRMED`" in value

@@ -5,6 +5,19 @@ README는 현재 제품의 목적과 사용법만 설명합니다. 구현 변경
 
 ## 현재 릴리스
 
+### Luna 시작 게이트 보정
+
+- 현재 Codex task에 성공적으로 적용된 `gpt-5.6-luna/high` 모델 지정
+  영수증을 런타임 증거로 인정하고, Web GPT의 `Extra High`와 Luna reasoning
+  effort를 분리해 보고합니다.
+- 원본 checkout이 dirty이면 stash·reset·임의 commit하지 않고,
+  `startingState: working-tree`인 별도 Codex worktree task로 현재 상태를
+  보존·격리한 뒤 clean boundary에서만 supervisor를 준비합니다.
+- 사용자가 Notion 주소 자동 채움을 요청하면 같은 Project에 연결되고 AI
+  접근이 허용된 유일한 기존 Task·Report를 canonical readback으로 확정합니다.
+- 과거 task의 Oracle patch 누락 보고보다 현재 설치 artifact의 존재·hash
+  readback을 우선해 복구 후에도 오래된 실패로 다시 막히지 않게 합니다.
+
 ### Luna 연속 지휘모드
 
 - 기존 `$web-gpt`를 변경하지 않고 명시 호출형 `$luna-web-supervisor`를

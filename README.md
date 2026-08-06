@@ -155,6 +155,13 @@ Codex 작업은 실제 `gpt-5.6-luna` + `high`여야 하며 제품 소스를 수
 않습니다. Luna는 한 번에 Web GPT 실행 하나만 제출·복구하고, 결과의 Git
 경계와 선언된 테스트를 확인한 뒤 기존 Notion 기록을 readback합니다.
 
+원본 checkout이 dirty이면 원본을 stash·reset하지 않습니다. 사용자가 별도
+Luna 작업을 승인한 경우 현재 변경을 포함하는 `working-tree` 시작 상태의
+Codex worktree task로 격리한 뒤 clean boundary에서 진행합니다. Notion 주소를
+자동으로 채우라고 요청한 경우에는 같은 Project에 연결되고 AI 접근이 허용된
+유일한 기존 Task·Report를 사용합니다. Luna의 effort는 `high`이고,
+`Extra High`는 Web GPT Sol 화면에만 적용됩니다.
+
 검증이 실패하면 Luna가 직접 고치지 않습니다. 실패 로그·현재 commit·허용
 파일을 고정한 개선 미션을 만들고, 실패 기록을 Notion에서 다시 읽은 뒤 새
 Web GPT 실행으로 원인 판단과 수정·테스트·commit을 요청합니다. 단위별

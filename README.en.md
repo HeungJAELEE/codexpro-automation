@@ -158,6 +158,13 @@ serializes one Web GPT run at a time, recovers only its exact Oracle slug,
 checks the declared Git and test contract, and reads back the existing Notion
 record before advancing.
 
+If the source checkout is dirty, the supervisor never stashes or resets it.
+With explicit authorization for a separate Luna task, it carries the current
+working-tree state into an isolated Codex worktree task and starts only from a
+clean boundary there. An explicit request to auto-fill Notion targets selects
+the single linked Task and Report for the same project only when both permit AI
+access. Luna uses `high`; visible `Extra High` applies only to Web GPT Sol.
+
 On a remediable validation failure, Luna does not fix the code. It freezes the
 failure log, current commit, and allowed paths into a new remediation mission,
 records and reads back that attempt, then asks a new Web GPT run to diagnose,

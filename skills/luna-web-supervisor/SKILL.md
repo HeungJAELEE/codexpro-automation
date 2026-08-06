@@ -28,8 +28,11 @@ requests, a large project, or mention of Luna/Web GPT do not activate it.
 Before any live submission:
 
 1. Confirm the current Codex task is actually `gpt-5.6-luna` with `high`
-   reasoning from surfaced runtime metadata. Do not infer this from the skill
-   name or manifest. If it cannot be proven, report
+   reasoning. Accept either surfaced runtime metadata or a successful
+   `create_thread`/`send_message_to_thread` receipt for this exact task that
+   explicitly set `model: gpt-5.6-luna` and `thinking: high`, provided no later
+   model override exists. A model list, cache, skill name, prompt, or manifest
+   alone is not proof. If neither proof exists, report
    `LUNA_SUPERVISOR_MODEL_UNCONFIRMED` and do not submit.
 2. Read `chatgpt-question-designer` and `chatgpt-thinking-browser` completely.
    Reuse their current Oracle + DevSpace transport and exact-recovery rules.
@@ -41,9 +44,78 @@ Before any live submission:
    to the approved project. Never copy a whole conversation, secret, cookie,
    credential, or unrelated Notion content.
 
+`high` above is the Codex Luna reasoning effort. Visible `Extra High` applies
+only to the Web GPT `GPT-5.6 Sol` UI. Never require, infer, or report Luna as
+`Extra High`.
+
 The explicit supervisor invocation authorizes only the frozen manifest. It does
 not authorize push, PR, deployment, permission changes, destructive Git
 operations, or a different project.
+
+## Resolve bootstrap evidence
+
+Resolve bootstrap facts before writing or validating the manifest.
+
+### Current runtime, not a stale incident
+
+Immediately before the first Oracle preview in a Codex task, read back the
+currently installed Oracle compatibility artifact, including:
+
+`%USERPROFILE%\.codex\bin\oracle-compat\0.16.1\assistantResponse.patch`
+
+Verify it against the installed package inventory or reviewed source hash. A
+missing-file incident from an earlier task or an earlier installation does not
+override a successful current readback. Record
+`RUNTIME_PREREQUISITE_CONFIRMED` when the current artifact is present and
+matches; otherwise stop with the current runtime error. Never edit a cache or
+synthesize a replacement patch during supervision.
+
+### Exact project and a clean isolated boundary
+
+If the user supplied a placeholder project path but explicitly asked Codex to
+fill it automatically, resolve the saved project's actual checkout and confirm
+it with `git rev-parse --show-toplevel`. A placeholder alone is not a blocker
+when exactly one project-bound Git root is available.
+
+`prepare` still requires a clean exact Git root. When the saved checkout is
+dirty:
+
+1. Never stash, reset, clean, commit, or otherwise mutate the original
+   checkout just to satisfy `prepare`.
+2. If the user explicitly authorized a separate Luna task or isolated Luna
+   route, create that Codex project task with `environment: worktree`,
+   `startingState: working-tree`, `model: gpt-5.6-luna`, and `thinking: high`.
+   This carries the current checkout and its uncommitted state into an isolated
+   task instead of silently dropping it.
+3. Wait for worktree setup, use the returned task's actual Git root, verify the
+   required starting-state fingerprint is represented, and require that
+   isolated root to be clean before `prepare`.
+4. Treat the successful task-creation receipt as model/effort proof only for
+   that exact task. It is not proof for the original task or another run.
+
+If the dirty checkout needs isolation but the user has not authorized a
+separate task, report `LUNA_ISOLATED_TASK_REQUIRED` with the exact proposed
+project, `working-tree` starting state, model, effort, and no-push/no-deploy
+boundary. Do not misreport this recoverable bootstrap choice as a product
+failure.
+
+### Existing Notion targets
+
+When exact URLs are provided, fetch them and confirm the project relation and
+AI access. When the user explicitly says to fill Notion addresses
+automatically, a placeholder alone is not a blocker. Search existing managed
+records and auto-select only when there is exactly one Task and one connected
+Report that:
+
+- share the exact approved `Project / Area` or equivalent project relation;
+- are already linked to each other;
+- permit ChatGPT/AI access; and
+- describe the same approved product scope.
+
+Fetch both canonical URLs and properties, place those URLs in the manifest,
+and read them back before submission. Ask the user only when candidates are
+missing, conflicting, or ambiguous; then report
+`NOTION_TARGETS_NEED_CONFIRMATION` with the candidate titles and URLs.
 
 ## Hard role boundary
 
@@ -106,6 +178,10 @@ $LunaSupervisorPython = Join-Path $env:LOCALAPPDATA 'Programs\Python\Python311\p
 `prepare` requires the exact Git root to be clean, freezes all mission hashes,
 checks that the checkpoint directory is Git-ignored, and stores durable state
 under `%USERPROFILE%\.codex\state\luna-web-supervisor`.
+
+Do not run `prepare` against a known dirty saved checkout. First follow the
+clean isolated-boundary procedure above and update `project_root` to the actual
+isolated Git root.
 
 ## Continuous unit loop
 
@@ -237,7 +313,8 @@ unit's frozen attempt budget is exhausted.
 
 Stop and preserve state when:
 
-- Luna model/effort, Sol model, or visible Extra High cannot be proven;
+- Luna `gpt-5.6-luna/high`, Web GPT `GPT-5.6 Sol`, or Web GPT visible
+  `Extra High` cannot be proven through their separate evidence;
 - submission ownership, slug, result identity, or mission hash is uncertain;
 - Web GPT touches a path outside every authorized outcome;
 - the worktree is dirty at a boundary or history diverges;
