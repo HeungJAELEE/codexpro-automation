@@ -1,6 +1,6 @@
 {
   "name": "codexpro-automation",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "private": false,
   "description": "Windows orchestrator that delegates Codex planning, research, implementation, and review to web ChatGPT through Oracle and DevSpace",
   "license": "MIT",
@@ -69,6 +69,7 @@
     "skills/luna-web-supervisor/scripts/supervisor_core.py",
     "skills/luna-web-supervisor/scripts/supervisor_execution.py",
     "skills/luna-web-supervisor/scripts/supervisor_git.py",
+    "skills/luna-web-supervisor/scripts/supervisor_incident.py",
     "skills/luna-web-supervisor/scripts/supervisor_manifest.py",
     "skills/luna-web-supervisor/scripts/supervisor_records.py",
     "skills/luna-web-supervisor/scripts/supervisor_remediation.py",

@@ -239,6 +239,23 @@ If the live command times out or becomes uncertain, recover only that recorded
 run and stored slug. Never create a replacement submission. Use the current
 Oracle runtime's own wait and recovery budgets; this skill does not alter them.
 
+If Oracle proves that it failed before the composer, classify the exact run
+before creating any replacement. A safe incident must have
+`safe_for_fresh_run: true`, no conversation URL, no unresolved owner, and the
+same frozen project and mission. Preserve that failed reservation with:
+
+```powershell
+& $LunaSupervisorPython "$env:USERPROFILE\.codex\skills\luna-web-supervisor\scripts\supervisor_state.py" pre-submit-failed `
+  --manifest C:\exact-project\.ai-bridge\supervisor.json `
+  --unit-id session-02 `
+  --run-dir C:\exact-host-oracle-run
+```
+
+This records `PRE_SUBMIT_FAILED`; it does not refund or erase the attempt.
+Create a fresh dry-run preview and reservation only when the remaining frozen
+attempt and total submission budgets allow it. Never rerun the failed run or
+reuse its preview reservation.
+
 ### 3. Freeze the durable result
 
 Only Oracle state `complete`, exit code 0, the same slug, and the exact nonempty

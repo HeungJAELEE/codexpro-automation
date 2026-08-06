@@ -111,6 +111,79 @@ class LunaWebSupervisorTests(LunaSupervisorTestCase):
         self.assertEqual("DISPLAY_PROOF_MISSING", raised.exception.code)
         self.assertEqual("SUBMISSION_RESERVED", self.state()["phase"])
 
+    def test_route_requires_browser_foundation_and_orchestrator_dispatch(self) -> None:
+        self.prepare_and_reserve()
+        run_dir, proof = self.create_oracle_run("wrong-dispatch")
+        oracle_state_path = run_dir / "state.json"
+        oracle_state = json.loads(oracle_state_path.read_text(encoding="utf-8"))
+        oracle_state.pop("dispatch_mode")
+        oracle_state_path.write_text(json.dumps(oracle_state), encoding="utf-8")
+        with self.assertRaises(SUPERVISOR.SupervisorError) as raised:
+            SUPERVISOR.submitted(
+                str(self.manifest_path),
+                "session-01",
+                str(run_dir),
+                str(proof),
+            )
+        self.assertEqual("ORACLE_ROUTE_MISMATCH", raised.exception.code)
+        self.assertEqual("SUBMISSION_RESERVED", self.state()["phase"])
+
+    def test_proven_pre_submit_failure_preserves_attempt_and_allows_new_reservation(self) -> None:
+        self.prepare_and_reserve()
+        state = self.state()
+        attempt = state["units"][0]["attempts"][-1]
+        mission = self.project / Path(*attempt["mission_path"].split("/"))
+        run_dir = self.root / "oracle-pre-submit"
+        run_dir.mkdir()
+        stdout = run_dir / "stdout.log"
+        stderr = run_dir / "stderr.log"
+        output = run_dir / "output.md"
+        stdout.write_text(
+            "ERROR: ChatGPT browser manual-login profile is not initialized.\n",
+            encoding="utf-8",
+        )
+        stderr.write_text("", encoding="utf-8")
+        (run_dir / "state.json").write_text(
+            json.dumps(
+                {
+                    "schema": "codex.chatgpt.oracle-run-state/v1",
+                    "run_id": "pre-submit-test",
+                    "project_root": str(self.project.resolve()),
+                    "session_authority": "submitted_unknown",
+                    "status": "attention_required",
+                    "mission": {
+                        "path": str(mission.resolve()),
+                        "sha256": SUPERVISOR.sha256_file(mission),
+                    },
+                    "oracle": {"slug": "pre-submit-test", "conversation_url": ""},
+                    "artifacts": {
+                        "output": str(output),
+                        "stdout": str(stdout),
+                        "stderr": str(stderr),
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        released = SUPERVISOR.pre_submit_failed(
+            str(self.manifest_path), "session-01", str(run_dir)
+        )
+        self.assertEqual("UNIT_READY", released["phase"])
+        persisted = self.state()
+        first = persisted["units"][0]["attempts"][0]
+        self.assertEqual("PRE_SUBMIT_FAILED", first["status"])
+        self.assertEqual(
+            "oracle-browser-profile-not-initialized",
+            first["oracle"]["incident_signature"],
+        )
+
+        second = SUPERVISOR.reserve(
+            str(self.manifest_path), "session-01", "c" * 64
+        )
+        self.assertEqual("SUBMISSION_RESERVED", second["phase"])
+        self.assertEqual(2, len(self.state()["units"][0]["attempts"]))
+
     def test_result_rechecks_bound_display_proof_identity(self) -> None:
         self.prepare_and_reserve()
         run_dir, proof = self.create_oracle_run("proof-tamper")
@@ -179,7 +252,7 @@ class LunaWebSupervisorTests(LunaSupervisorTestCase):
 
     def test_supervisor_modules_respect_architecture_size_limit(self) -> None:
         scripts = sorted(MODULE_PATH.parent.glob("supervisor_*.py"))
-        self.assertEqual(9, len(scripts))
+        self.assertEqual(10, len(scripts))
         oversized = {
             path.name: len(path.read_text(encoding="utf-8").splitlines())
             for path in scripts

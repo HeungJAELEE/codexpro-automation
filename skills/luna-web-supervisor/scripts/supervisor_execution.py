@@ -18,6 +18,7 @@ from supervisor_core import (
     utc_now,
 )
 from supervisor_git import git_identity, require_clean, within
+from supervisor_incident import build_incident_packet
 from supervisor_store import (
     current_attempt,
     load_existing,
@@ -25,6 +26,24 @@ from supervisor_store import (
     require_phase,
     save_state,
 )
+
+
+def require_orchestrator_route(oracle_state: dict[str, object]) -> None:
+    route = {
+        "mode": oracle_state.get("mode"),
+        "dispatch_mode": oracle_state.get("dispatch_mode"),
+        "transport": oracle_state.get("transport"),
+    }
+    if route != {
+        "mode": "browser",
+        "dispatch_mode": "orchestrator",
+        "transport": "devspace",
+    }:
+        raise SupervisorError(
+            "ORACLE_ROUTE_MISMATCH",
+            "Oracle run must preserve browser foundation plus orchestrator-over-DevSpace dispatch",
+            route,
+        )
 
 
 def reserve(manifest_path: str, unit_id: str, preview_sha256: str) -> dict[str, object]:
@@ -66,9 +85,13 @@ def reserve(manifest_path: str, unit_id: str, preview_sha256: str) -> dict[str, 
             mission_path = unit["mission_path"]
             mission_sha256 = unit["mission_sha256"]
             attempt_kind = "initial"
-            if attempt_number != 1:
-                raise SupervisorError("STATE_INVALID", "initial unit may only create attempt one")
-            unit["initial_head"] = head
+            if attempt_number == 1:
+                unit["initial_head"] = head
+            elif current_attempt(unit).get("status") != "PRE_SUBMIT_FAILED":
+                raise SupervisorError(
+                    "STATE_INVALID",
+                    "a later initial attempt requires a proven pre-submit failure",
+                )
         else:
             pending = unit.get("pending_remediation")
             if not isinstance(pending, dict):
@@ -131,12 +154,7 @@ def submitted(
         oracle_state = read_json(oracle_state_path)
         if oracle_state.get("project_root") != manifest["project_root"]:
             raise SupervisorError("ORACLE_PROJECT_MISMATCH", "Oracle run belongs to a different project")
-        if oracle_state.get("mode") != "orchestrator" or oracle_state.get("transport") != "devspace":
-            raise SupervisorError(
-                "ORACLE_ROUTE_MISMATCH",
-                "Oracle run must be orchestrator over DevSpace",
-                {"mode": oracle_state.get("mode"), "transport": oracle_state.get("transport")},
-            )
+        require_orchestrator_route(oracle_state)
         mission = oracle_state.get("mission") if isinstance(oracle_state.get("mission"), dict) else {}
         expected_mission = resolve_project_path(
             Path(manifest["project_root"]),
@@ -220,6 +238,64 @@ def submitted(
         return public_status(state_dir, state)
 
 
+def pre_submit_failed(
+    manifest_path: str,
+    unit_id: str,
+    run_dir_value: str,
+) -> dict[str, object]:
+    manifest, _, state_dir = load_existing(manifest_path)
+    with exclusive_lock(state_dir):
+        state = read_json(state_dir / "state.json")
+        unit = require_phase(state, "SUBMISSION_RESERVED", unit_id)
+        attempt = current_attempt(unit)
+        run_dir = Path(run_dir_value).expanduser().resolve(strict=True)
+        packet = build_incident_packet(run_dir)
+        if packet.get("project_root") != manifest["project_root"]:
+            raise SupervisorError("ORACLE_PROJECT_MISMATCH", "incident belongs to a different project")
+        if packet.get("safe_for_fresh_run") is not True:
+            raise SupervisorError(
+                "ORACLE_FRESH_RUN_UNSAFE",
+                "only a proven pre-submit incident may release the reserved unit for another attempt",
+                {"bucket": packet.get("bucket"), "signature": packet.get("signature")},
+            )
+        oracle_state_path = (run_dir / "state.json").resolve(strict=True)
+        oracle_state = read_json(oracle_state_path)
+        mission = oracle_state.get("mission") if isinstance(oracle_state.get("mission"), dict) else {}
+        expected_mission = resolve_project_path(
+            Path(manifest["project_root"]), attempt["mission_path"], must_exist=True
+        )
+        if (
+            str(mission.get("path") or "") != str(expected_mission)
+            or str(mission.get("sha256") or "").casefold() != attempt["mission_sha256"]
+        ):
+            raise SupervisorError(
+                "ORACLE_MISSION_MISMATCH",
+                "pre-submit incident does not belong to the exact reserved mission",
+            )
+        attempt["status"] = "PRE_SUBMIT_FAILED"
+        attempt["oracle"] = {
+            "run_dir": str(run_dir),
+            "state_path": str(oracle_state_path),
+            "state_sha256": sha256_file(oracle_state_path),
+            "incident_bucket": packet["bucket"],
+            "incident_signature": packet["signature"],
+            "evidence_paths": packet["evidence_paths"],
+        }
+        unit["status"] = "UNIT_READY"
+        state["phase"] = "UNIT_READY"
+        save_state(
+            state_dir,
+            state,
+            "PRE_SUBMIT_FAILED",
+            {
+                "attempt_number": attempt["number"],
+                "run_dir": str(run_dir),
+                "signature": packet["signature"],
+            },
+        )
+        return public_status(state_dir, state)
+
+
 def result_ready(manifest_path: str, unit_id: str, result_path_value: str) -> dict[str, object]:
     manifest, _, state_dir = load_existing(manifest_path)
     with exclusive_lock(state_dir):
@@ -238,15 +314,12 @@ def result_ready(manifest_path: str, unit_id: str, result_path_value: str) -> di
                     "run_dir": str(run_dir),
                 },
             )
-        if (
-            oracle_state.get("project_root") != manifest["project_root"]
-            or oracle_state.get("mode") != "orchestrator"
-            or oracle_state.get("transport") != "devspace"
-        ):
+        if oracle_state.get("project_root") != manifest["project_root"]:
             raise SupervisorError(
-                "ORACLE_ROUTE_MISMATCH",
-                "the completed Oracle run no longer matches the bound project and route",
+                "ORACLE_PROJECT_MISMATCH",
+                "the completed Oracle run belongs to a different project",
             )
+        require_orchestrator_route(oracle_state)
         mission = oracle_state.get("mission") if isinstance(oracle_state.get("mission"), dict) else {}
         expected_mission = resolve_project_path(
             Path(manifest["project_root"]),

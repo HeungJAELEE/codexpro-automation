@@ -72,6 +72,11 @@ def run_smoke(*, bin_root: Path) -> dict[str, Any]:
         config = state.load_manifest(manifest_path)
         record("manifest_loads", True, {"transport": config.transport, "app_name": config.app_name})
         record("devspace_transport_selected", config.transport == "devspace" and config.app_name == "DevSpace")
+        record(
+            "semantic_dispatch_mode_preserved",
+            config.mode == "browser" and config.dispatch_mode == "direct",
+            {"mode": config.mode, "dispatch_mode": config.dispatch_mode},
+        )
 
         prompt = state.composer_prompt(config) if hasattr(state, "composer_prompt") else None
         if prompt is None:

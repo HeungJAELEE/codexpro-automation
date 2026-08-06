@@ -173,6 +173,31 @@ def test_regular_manifest_requires_exact_devspace_app(tmp_path: Path) -> None:
     assert exc.value.code == "DEVSPACE_APP_REQUIRED"
 
 
+def test_dispatch_mode_is_validated_and_persisted_separately_from_browser_mode(
+    tmp_path: Path,
+) -> None:
+    state = load_state()
+    mission = tmp_path / "mission.md"
+    mission.write_text("work", encoding="utf-8")
+    config = state.load_manifest(
+        manifest(tmp_path, mission.resolve(), dispatch_mode="orchestrator")
+    )
+    layout = state.create_layout(config, run_id="dispatch-mode-test")
+    payload = state.state_payload(
+        config, layout, status="prepared", resolved_version="oracle 0.16.1"
+    )
+    assert config.mode == "browser"
+    assert config.dispatch_mode == "orchestrator"
+    assert payload["mode"] == "browser"
+    assert payload["dispatch_mode"] == "orchestrator"
+
+    with pytest.raises(state.OracleStateError) as exc:
+        state.load_manifest(
+            manifest(tmp_path, mission.resolve(), dispatch_mode="made-up-mode")
+        )
+    assert exc.value.code == "DISPATCH_MODE_INVALID"
+
+
 def test_layout_uses_oracle_exact_ten_character_session_suffix(tmp_path: Path) -> None:
     state = load_state()
     mission = tmp_path / "mission.md"

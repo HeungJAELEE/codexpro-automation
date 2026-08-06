@@ -63,6 +63,11 @@ BUCKETS = (
 SIGNATURE_RULES: tuple[tuple[str, str, str], ...] = (
     ("rsync", PRE_SUBMIT_HOST, "oracle-profile-copy-requires-rsync"),
     ("cannot be combined with", PRE_SUBMIT_HOST, "oracle-launch-flags-mutually-exclusive"),
+    (
+        "ChatGPT browser manual-login profile is not initialized",
+        PRE_SUBMIT_HOST,
+        "oracle-browser-profile-not-initialized",
+    ),
     ("app mention suggestion did not appear", PRE_SUBMIT_UI, "app-mention-suggestion-absent"),
     ("app mention was not confirmed", PRE_SUBMIT_UI, "app-mention-not-confirmed"),
     ("Unable to find model option", PRE_SUBMIT_UI, "model-option-label-missing"),
@@ -138,6 +143,8 @@ def classify_run(
         code = str(host_failure.get("code") or "")
         if code == "ORACLE_ATTACHMENT_SIZE_PRELAUNCH_FAILED":
             return {"bucket": PRE_SUBMIT_HOST, "signature": "oracle-attachment-size-prelaunch-limit"}
+        if code == "ORACLE_BROWSER_PROFILE_UNINITIALIZED_PRELAUNCH_FAILED":
+            return {"bucket": PRE_SUBMIT_HOST, "signature": "oracle-browser-profile-not-initialized"}
         if code != "ORACLE_VERSION_RESOLUTION_PRELAUNCH_FAILED":
             return {"bucket": UNCLASSIFIED, "signature": "unrecognized-pre-submit-host-failure"}
         return {

@@ -93,6 +93,28 @@ def test_version_resolution_prelaunch_incident_is_safe_to_retry(tmp_path: Path) 
     assert packet["safe_for_fresh_run"] is True
 
 
+def test_uninitialized_manual_login_profile_is_safe_pre_submit_host_failure(
+    tmp_path: Path,
+) -> None:
+    module = load()
+    run_dir = write_run(
+        tmp_path,
+        "p" * 8,
+        status="attention_required",
+        session_authority="submitted_unknown",
+        stdout=(
+            "ERROR: ChatGPT browser manual-login profile is not initialized. "
+            "Run first-time setup, sign in there, then retry.\n"
+        ),
+    )
+
+    packet = module.build_packet(run_dir)
+
+    assert packet["bucket"] == "pre-submit-host-environment"
+    assert packet["signature"] == "oracle-browser-profile-not-initialized"
+    assert packet["safe_for_fresh_run"] is True
+
+
 def test_version_compatibility_drift_incident_is_safe_to_retry(tmp_path: Path) -> None:
     module = load()
     run_dir = write_run(tmp_path, "c" * 8, status="failed")

@@ -5,6 +5,19 @@ README는 현재 제품의 목적과 사용법만 설명합니다. 구현 변경
 
 ## 현재 릴리스
 
+### Oracle 지휘 라우트와 제출 전 복구
+
+- Oracle 하위 실행기의 `mode=browser`와 dispatcher의 의미 계약
+  `dispatch_mode=orchestrator`를 내구 상태에 함께 기록합니다.
+- Luna supervisor는 `browser + orchestrator + devspace` 조합을 검증하며,
+  존재할 수 없는 `mode=orchestrator` 상태를 요구하지 않습니다.
+- `ChatGPT browser manual-login profile is not initialized` 오류를 composer
+  이전 호스트 실패로 분류합니다. 대화 URL과 다른 실행 소유권이 없을 때만
+  `safe_for_fresh_run`을 허용합니다.
+- `pre-submit-failed` 전이는 실패한 예약과 incident 근거를 삭제하지 않고
+  `PRE_SUBMIT_FAILED`로 보존한 뒤 남은 승인 횟수 안에서 새 미리보기와 예약을
+  만들게 합니다. 동일 실행 자동 재시도는 하지 않습니다.
+
 ### Luna 시작 게이트 보정
 
 - 현재 Codex task에 성공적으로 적용된 `gpt-5.6-luna/high` 모델 지정

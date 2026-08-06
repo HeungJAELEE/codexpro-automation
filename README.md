@@ -162,6 +162,13 @@ Codex worktree task로 격리한 뒤 clean boundary에서 진행합니다. Notio
 유일한 기존 Task·Report를 사용합니다. Luna의 effort는 `high`이고,
 `Extra High`는 Web GPT Sol 화면에만 적용됩니다.
 
+Oracle 상태의 `mode=browser`는 하위 브라우저 실행기이고,
+`dispatch_mode=orchestrator`가 상위 지휘 계약입니다. 두 값을 서로 바꾸어
+판정하지 않습니다. 로그인 전용 프로필이 초기화되지 않아 composer 이전에
+실패한 경우에는 incident 분류가 실제 미제출을 입증한 뒤에만 현재 시도를
+`PRE_SUBMIT_FAILED`로 보존하고 새 예약을 허용합니다. 같은 실행을 재제출하지
+않습니다.
+
 검증이 실패하면 Luna가 직접 고치지 않습니다. 실패 로그·현재 commit·허용
 파일을 고정한 개선 미션을 만들고, 실패 기록을 Notion에서 다시 읽은 뒤 새
 Web GPT 실행으로 원인 판단과 수정·테스트·commit을 요청합니다. 단위별

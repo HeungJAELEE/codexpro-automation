@@ -199,7 +199,8 @@ class LunaSupervisorTestCase(unittest.TestCase):
         oracle_state = {
             "schema": "codex.chatgpt.oracle-state/v1",
             "project_root": str(self.project.resolve()),
-            "mode": "orchestrator",
+            "mode": "browser",
+            "dispatch_mode": "orchestrator",
             "transport": "devspace",
             "profile": {
                 "model": "gpt-5.6",

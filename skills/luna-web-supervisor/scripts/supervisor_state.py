@@ -17,7 +17,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from supervisor_core import SupervisorError, sha256_file  # noqa: E402
-from supervisor_execution import reserve, result_ready, submitted  # noqa: E402
+from supervisor_execution import pre_submit_failed, reserve, result_ready, submitted  # noqa: E402
 from supervisor_records import block, record, record_remediation  # noqa: E402
 from supervisor_store import prepare, status  # noqa: E402
 from supervisor_verification import verify  # noqa: E402
@@ -42,6 +42,11 @@ def build_parser() -> argparse.ArgumentParser:
     submitted_parser.add_argument("--unit-id", required=True)
     submitted_parser.add_argument("--run-dir", required=True)
     submitted_parser.add_argument("--display-proof-file", required=True)
+
+    failed_parser = subparsers.add_parser("pre-submit-failed")
+    failed_parser.add_argument("--manifest", required=True)
+    failed_parser.add_argument("--unit-id", required=True)
+    failed_parser.add_argument("--run-dir", required=True)
 
     result_parser = subparsers.add_parser("result")
     result_parser.add_argument("--manifest", required=True)
@@ -81,6 +86,8 @@ def main(argv: list[str] | None = None) -> int:
             result = reserve(args.manifest, args.unit_id, args.preview_sha256)
         elif args.command == "submitted":
             result = submitted(args.manifest, args.unit_id, args.run_dir, args.display_proof_file)
+        elif args.command == "pre-submit-failed":
+            result = pre_submit_failed(args.manifest, args.unit_id, args.run_dir)
         elif args.command == "result":
             result = result_ready(args.manifest, args.unit_id, args.result_path)
         elif args.command == "verify":

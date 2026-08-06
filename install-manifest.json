@@ -1,6 +1,6 @@
 {
   "schema": "codexpro.install-manifest/v1",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "include": [
     "bin/chatgpt_agbrowse_bridge.py",
     "bin/chatgpt_agbrowse_composer.py",
@@ -58,6 +58,7 @@
     "skills/luna-web-supervisor/scripts/supervisor_core.py",
     "skills/luna-web-supervisor/scripts/supervisor_execution.py",
     "skills/luna-web-supervisor/scripts/supervisor_git.py",
+    "skills/luna-web-supervisor/scripts/supervisor_incident.py",
     "skills/luna-web-supervisor/scripts/supervisor_manifest.py",
     "skills/luna-web-supervisor/scripts/supervisor_records.py",
     "skills/luna-web-supervisor/scripts/supervisor_remediation.py",

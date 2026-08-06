@@ -31,6 +31,8 @@ def test_regular_and_deep_research_compile_to_oracle_without_attachments(tmp_pat
         assert result["contract"]["attachments"] == []
         assert value["app_name"] == "DevSpace"
         assert value["task_outcome_contract"] == "v1"
+        assert value["mode"] == "browser"
+        assert value["dispatch_mode"] == mode
         assert value["model"] == "gpt-5.6"
         assert value["model_strategy"] == "select"
         assert value["thinking_time"] == "heavy"
@@ -54,6 +56,8 @@ def test_pro_compiles_attachment_only_oracle_and_manual_never_launches(tmp_path:
     value = json.loads(pro_target.read_text(encoding="utf-8"))
     assert pro["contract"]["route"] == "oracle-pro-attachment-only"
     assert value["transport"] == "pro-attachment-only"
+    assert value["mode"] == "browser"
+    assert value["dispatch_mode"] == "pro"
     assert value["model"] == "gpt-5.5-pro"
     assert value["attachments"] == [str(prompt.resolve()), str(packet.resolve())]
     assert "app_name" not in value

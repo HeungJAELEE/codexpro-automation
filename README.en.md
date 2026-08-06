@@ -165,6 +165,13 @@ clean boundary there. An explicit request to auto-fill Notion targets selects
 the single linked Task and Report for the same project only when both permit AI
 access. Luna uses `high`; visible `Extra High` applies only to Web GPT Sol.
 
+Oracle state `mode=browser` identifies the foundation browser runner, while
+`dispatch_mode=orchestrator` preserves the semantic command contract. The
+supervisor validates both instead of conflating them. If the private login
+profile fails before the composer, only a classified no-submission incident
+can preserve the attempt as `PRE_SUBMIT_FAILED` and unlock a new reservation;
+the failed run itself is never resubmitted.
+
 On a remediable validation failure, Luna does not fix the code. It freezes the
 failure log, current commit, and allowed paths into a new remediation mission,
 records and reads back that attempt, then asks a new Web GPT run to diagnose,

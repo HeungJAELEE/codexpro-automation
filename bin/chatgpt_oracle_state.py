@@ -147,6 +147,7 @@ class OracleConfig:
     mission_sha256: str
     app_name: str | None
     mode: str
+    dispatch_mode: str | None
     transport: str
     attachments: tuple[Path, ...]
     attachment_sha256s: tuple[str, ...]
@@ -301,6 +302,13 @@ def load_manifest(path: Path, *, platform_name: str | None = None) -> OracleConf
     mode = str(payload.get("mode") or "browser").strip().casefold()
     if mode != "browser":
         raise OracleStateError("MODE_INVALID", "Oracle foundation runner supports mode=browser only")
+    dispatch_mode_raw = str(payload.get("dispatch_mode") or "").strip().casefold()
+    dispatch_mode = dispatch_mode_raw or None
+    if dispatch_mode not in {None, "direct", "edit", "orchestrator", "deep-research", "pro"}:
+        raise OracleStateError(
+            "DISPATCH_MODE_INVALID",
+            "dispatch_mode must identify one supported semantic dispatcher contract",
+        )
     transport = str(payload.get("transport") or "devspace").strip().casefold()
     if transport not in {"devspace", "pro-attachment-only"}:
         raise OracleStateError("TRANSPORT_INVALID", "transport must be devspace or pro-attachment-only")
@@ -443,6 +451,7 @@ def load_manifest(path: Path, *, platform_name: str | None = None) -> OracleConf
         sha256_file(mission_path),
         app_name,
         mode,
+        dispatch_mode,
         transport,
         attachments,
         tuple(sha256_file(item) for item in attachments),
@@ -519,7 +528,8 @@ def create_layout(config: OracleConfig, *, run_id: str | None = None) -> RunLayo
 def state_payload(config: OracleConfig, layout: RunLayout, *, status: str, resolved_version: str, exit_code: int | None = None) -> dict[str, Any]:
     return {
         "schema": STATE_SCHEMA, "run_id": layout.run_id, "project_root": str(config.project_root),
-        "mode": config.mode, "transport": config.transport, "app_name": config.app_name,
+        "mode": config.mode, "dispatch_mode": config.dispatch_mode,
+        "transport": config.transport, "app_name": config.app_name,
         "profile": {
             "model": config.model,
             "model_strategy": config.model_strategy,
@@ -1533,10 +1543,42 @@ def proven_pre_submit_profile_copy_ebusy(state_path: Path) -> dict[str, Any] | N
     }
 
 
+def proven_pre_submit_profile_uninitialized(state_path: Path) -> dict[str, Any] | None:
+    """Prove Oracle stopped before the composer because its private login was absent."""
+    state = load_state(state_path)
+    if str(state.get("session_authority") or "") not in {"pre_submit", "submitted_unknown"}:
+        return None
+    if state.get("terminal_harvested") is True or _state_has_conversation_url(state):
+        return None
+    artifacts = state.get("artifacts") if isinstance(state.get("artifacts"), dict) else {}
+    output = Path(str(artifacts.get("output") or ""))
+    stdout_record = _artifact_bytes(state, "stdout")
+    stderr_record = _artifact_bytes(state, "stderr")
+    if output_is_nonempty(output) or stdout_record is None or stderr_record is None:
+        return None
+    _, stdout_bytes = stdout_record
+    _, stderr_bytes = stderr_record
+    text = (stdout_bytes + b"\n" + stderr_bytes).decode("utf-8", errors="replace")
+    if "https://chatgpt.com/c/" in text.casefold():
+        return None
+    if "ChatGPT browser manual-login profile is not initialized" not in text:
+        return None
+    return {
+        "schema": "codex.chatgpt.oracle-pre-submit-host-failure/v1",
+        "code": "ORACLE_BROWSER_PROFILE_UNINITIALIZED_PRELAUNCH_FAILED",
+        "stdout_sha256": hashlib.sha256(stdout_bytes).hexdigest(),
+        "stderr_sha256": hashlib.sha256(stderr_bytes).hexdigest(),
+        "output_absent": True,
+        "conversation_url_absent": True,
+        "failure_reason": "oracle-browser-profile-not-initialized",
+    }
+
+
 def proven_pre_submit_failure(state_path: Path) -> dict[str, Any] | None:
     return (
         proven_pre_submit_rejection(state_path)
         or proven_pre_submit_profile_copy_ebusy(state_path)
+        or proven_pre_submit_profile_uninitialized(state_path)
         or proven_pre_submit_host_failure(state_path)
         or proven_user_confirmed_no_submission(state_path)
     )
@@ -1575,6 +1617,8 @@ def settle_proven_pre_submit_failure(state_path: Path) -> dict[str, Any] | None:
     if evidence is None:
         evidence = proven_pre_submit_profile_copy_ebusy(state_path)
     if evidence is None:
+        evidence = proven_pre_submit_profile_uninitialized(state_path)
+    if evidence is None:
         return None
     payload = load_state(state_path)
     payload.update({
@@ -1584,10 +1628,19 @@ def settle_proven_pre_submit_failure(state_path: Path) -> dict[str, Any] | None:
         "terminal_harvested": False,
         "artifact_sha256": None,
         "transport_status": "failed_pre_submit",
-        "task_outcome": "not_executed" if evidence["code"] == "ORACLE_PROFILE_COPY_EBUSY_PRELAUNCH_FAILED" else "pending",
+        "task_outcome": (
+            "not_executed"
+            if evidence["code"] in {
+                "ORACLE_PROFILE_COPY_EBUSY_PRELAUNCH_FAILED",
+                "ORACLE_BROWSER_PROFILE_UNINITIALIZED_PRELAUNCH_FAILED",
+            }
+            else "pending"
+        ),
         "task_outcome_reason": (
             "oracle-profile-copy-ebusy-pre-submit"
             if evidence["code"] == "ORACLE_PROFILE_COPY_EBUSY_PRELAUNCH_FAILED"
+            else "oracle-browser-profile-not-initialized"
+            if evidence["code"] == "ORACLE_BROWSER_PROFILE_UNINITIALIZED_PRELAUNCH_FAILED"
             else "prelaunch-host-failure"
         ),
         "pre_submit_failure": evidence,

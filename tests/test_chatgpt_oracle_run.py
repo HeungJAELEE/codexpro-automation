@@ -1026,6 +1026,50 @@ def test_recovery_repairs_legacy_version_timeout_authority_without_oracle_call(t
     assert calls == []
 
 
+def test_recovery_settles_uninitialized_login_profile_without_oracle_call(
+    tmp_path: Path,
+) -> None:
+    runner = load_runner()
+    config = runner.STATE.load_manifest(manifest(tmp_path, run_id="p" * 32))
+    layout = runner.STATE.create_layout(config, run_id=config.requested_run_id)
+    layout.run_dir.mkdir(parents=True)
+    state = runner.STATE.state_payload(
+        config, layout, status="attention_required", resolved_version="oracle 0.16.1"
+    )
+    state.update(
+        {
+            "session_authority": "submitted_unknown",
+            "transport_status": "failed",
+            "exit_code": 1,
+        }
+    )
+    runner.STATE.write_json_atomic(layout.state_path, state)
+    layout.stdout_path.write_text(
+        "ERROR: ChatGPT browser manual-login profile is not initialized.\n",
+        encoding="utf-8",
+    )
+    layout.stderr_path.write_text("", encoding="utf-8")
+    calls: list[bool] = []
+
+    recovered = runner.recover_run(
+        layout.run_dir,
+        action="harvest",
+        oracle_command=["oracle"],
+        popen_factory=lambda *args, **kwargs: calls.append(True),
+    )
+    settled = runner.STATE.load_state(layout.state_path)
+
+    assert recovered["status"] == "pre_submit_failed"
+    assert recovered["safe_for_fresh_run"] is True
+    assert settled["session_authority"] == "pre_submit"
+    assert settled["task_outcome"] == "not_executed"
+    assert (
+        settled["pre_submit_failure"]["code"]
+        == "ORACLE_BROWSER_PROFILE_UNINITIALIZED_PRELAUNCH_FAILED"
+    )
+    assert calls == []
+
+
 def test_recovery_no_session_keeps_pre_submit_authority_and_allows_fresh_attempt(tmp_path: Path) -> None:
     runner = load_runner()
     config = runner.STATE.load_manifest(manifest(tmp_path, run_id="e" * 32))
