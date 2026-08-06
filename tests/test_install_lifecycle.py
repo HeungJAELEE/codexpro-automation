@@ -208,6 +208,19 @@ def test_temp_codex_home_install_and_rollback_is_exact_inverse() -> None:
         created = codex_home / 'bin' / 'chatgpt_agbrowse_composer.py'
         installed_pro_skill = codex_home / 'skills' / 'chatgpt-pro-browser' / 'SKILL.md'
         installed_pro_metadata = codex_home / 'skills' / 'chatgpt-pro-browser' / 'agents' / 'openai.yaml'
+        installed_supervisor_skill = codex_home / 'skills' / 'luna-web-supervisor' / 'SKILL.md'
+        installed_supervisor_metadata = codex_home / 'skills' / 'luna-web-supervisor' / 'agents' / 'openai.yaml'
+        supervisor_modules = (
+            'supervisor_core.py',
+            'supervisor_execution.py',
+            'supervisor_git.py',
+            'supervisor_manifest.py',
+            'supervisor_records.py',
+            'supervisor_remediation.py',
+            'supervisor_state.py',
+            'supervisor_store.py',
+            'supervisor_verification.py',
+        )
         assert overwritten.read_bytes() != original
         assert created.is_file()
         assert installed_pro_skill.read_bytes() == (
@@ -217,6 +230,19 @@ def test_temp_codex_home_install_and_rollback_is_exact_inverse() -> None:
             ROOT / 'skills' / 'chatgpt-pro-browser' / 'agents' / 'openai.yaml'
         ).read_bytes()
         assert b'allow_implicit_invocation: true' in installed_pro_metadata.read_bytes()
+        assert installed_supervisor_skill.read_bytes() == (
+            ROOT / 'skills' / 'luna-web-supervisor' / 'SKILL.md'
+        ).read_bytes()
+        assert installed_supervisor_metadata.read_bytes() == (
+            ROOT / 'skills' / 'luna-web-supervisor' / 'agents' / 'openai.yaml'
+        ).read_bytes()
+        for module_name in supervisor_modules:
+            assert (
+                codex_home / 'skills' / 'luna-web-supervisor' / 'scripts' / module_name
+            ).read_bytes() == (
+                ROOT / 'skills' / 'luna-web-supervisor' / 'scripts' / module_name
+            ).read_bytes()
+        assert b'allow_implicit_invocation: false' in installed_supervisor_metadata.read_bytes()
 
         rolled_back = run_powershell(
             '-File', str(ROOT / 'rollback.ps1'),
@@ -228,6 +254,12 @@ def test_temp_codex_home_install_and_rollback_is_exact_inverse() -> None:
         assert not created.exists()
         assert not installed_pro_skill.exists()
         assert not installed_pro_metadata.exists()
+        assert not installed_supervisor_skill.exists()
+        assert not installed_supervisor_metadata.exists()
+        for module_name in supervisor_modules:
+            assert not (
+                codex_home / 'skills' / 'luna-web-supervisor' / 'scripts' / module_name
+            ).exists()
         assert '"status":  "COMPLETE"' in rolled_back.stdout
 
 

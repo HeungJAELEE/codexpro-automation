@@ -18,6 +18,7 @@ Codex가 웹 ChatGPT에 계획·리서치·검토·코드 구현을 맡기고, �
 ## 이 도구로 할 수 있는 일
 
 - 웹 GPT가 로컬 프로젝트를 읽고 직접 수정·테스트
+- Luna가 웹 GPT의 연속 구현을 감시·검증·기록하고 실패를 다시 웹에 보내 개선
 - 계획, 검토, 수정, 지휘, 심층 리서치 모드
 - 여러 독립 ChatGPT 세션을 동시에 실행하는 Web Multi-GPT
 - PC 로컬 Codex 레인을 병렬 실행하는 읽기 전용 Local Multi-GPT
@@ -60,6 +61,7 @@ Codex가 해시·상태·최종 결정론적 테스트만 확인
 | 심층 리서치 | `deep-research` / deep research | 공개 자료와 프로젝트 증거 조사 | Oracle Deep Research + DevSpace |
 | Web Multi-GPT | Web Multi-GPT | 여러 관점의 독립 탐색·검증 | 독립 Oracle 세션 2~25개 + merger |
 | Local Multi-GPT | Local Multi-GPT | 로컬 병렬 자문·반례 탐색 | `gpt-5.6-luna` + `max` 고정, 읽기 전용 |
+| Luna 연속 지휘 | `$luna-web-supervisor` / 연속 지휘모드 | 웹 GPT 구현을 직렬 감시·검증·기록하고 실패를 웹에 재전달 | Luna `high` 감독 + Oracle DevSpace Sol Extra High |
 | 종합모드 | comprehensive mode | 계획부터 구현·최종 게이트까지 자동 연결 | plan → optional Pro/Multi → review → implementation → gate |
 | Pro | `pro` / Pro | 독립적인 최종 판단·설계 검토 후 결과만 반환 | Oracle 첨부 전용, DevSpace 없음 |
 
@@ -145,6 +147,21 @@ python "$env:USERPROFILE\.codex\bin\chatgpt_oracle_dispatch.py" `
 ```
 
 실제 실행 승인이 있을 때만 `--dry-run`을 제거합니다.
+
+## Luna 연속 지휘모드
+
+`$luna-web-supervisor`는 기존 `$web-gpt`와 분리된 명시 호출형 경로입니다.
+Codex 작업은 실제 `gpt-5.6-luna` + `high`여야 하며 제품 소스를 수정하지
+않습니다. Luna는 한 번에 Web GPT 실행 하나만 제출·복구하고, 결과의 Git
+경계와 선언된 테스트를 확인한 뒤 기존 Notion 기록을 readback합니다.
+
+검증이 실패하면 Luna가 직접 고치지 않습니다. 실패 로그·현재 commit·허용
+파일을 고정한 개선 미션을 만들고, 실패 기록을 Notion에서 다시 읽은 뒤 새
+Web GPT 실행으로 원인 판단과 수정·테스트·commit을 요청합니다. 단위별
+`max_web_attempts`와 전체 제출 상한을 manifest에 미리 적어 무한 반복을
+막습니다. 자세한 계약과 명령은
+[`skills/luna-web-supervisor/SKILL.md`](skills/luna-web-supervisor/SKILL.md)에
+있습니다.
 
 ## Pro 실행 예시
 

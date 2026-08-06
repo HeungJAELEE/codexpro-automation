@@ -12,6 +12,7 @@ MULTI = ROOT / "skills" / "web-multi-gpt" / "SKILL.md"
 RESEARCH = ROOT / "skills" / "chatgpt-deep-research-browser" / "SKILL.md"
 ORACLE = ROOT / "skills" / "chatgpt-oracle-runtime" / "SKILL.md"
 DESIGNER = ROOT / "skills" / "chatgpt-question-designer" / "SKILL.md"
+LUNA_SUPERVISOR = ROOT / "skills" / "luna-web-supervisor" / "SKILL.md"
 
 
 def text(path: Path) -> str:
@@ -216,3 +217,21 @@ def test_standalone_pro_never_transitions_into_comprehensive_implementation() ->
     assert "returns that durable Pro result to Codex\nand stops" in pro
     assert "never starts a review-to-implementation chain" in pro
     assert "If the user asks for comprehensive mode, use `chatgpt-pro-plan-handoff`" in pro
+
+
+def test_luna_supervisor_is_explicit_monitor_record_only_with_bounded_web_remediation() -> None:
+    value = text(LUNA_SUPERVISOR)
+    metadata = text(
+        ROOT / "skills" / "luna-web-supervisor" / "agents" / "openai.yaml"
+    )
+    assert "$luna-web-supervisor" in value
+    assert "does not change or weaken `web-gpt`" in value
+    assert "Luna does not repair code" in value
+    assert "record-remediation" in value
+    assert "Web GPT—not Luna—must" in value
+    assert "max_web_attempts" in value
+    assert "concurrency 1" in value
+    assert "GPT-5.6 Sol" in value
+    assert "Extra High" in value
+    assert "LUNA_SUPERVISOR_MODEL_UNCONFIRMED" in value
+    assert "allow_implicit_invocation: false" in metadata

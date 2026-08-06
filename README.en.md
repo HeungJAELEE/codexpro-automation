@@ -20,6 +20,8 @@ attachments through Oracle.
 ## What it provides
 
 - Web GPT can inspect, change, and test a local project.
+- Luna can supervise, verify, and record serialized Web GPT implementation and
+  send failed checks back to Web GPT for remediation.
 - Direct, plan, review, edit, orchestrator, deep-research, and Pro modes.
 - Genuine Web Multi-GPT with independent ChatGPT sessions.
 - Read-only Local Multi-GPT with parallel Codex lanes on the PC.
@@ -58,6 +60,7 @@ Host state and ChatGPT output are stored outside DevSpace projects under
 | Deep Research | `deep-research` / deep research | Public research plus project evidence | Oracle Deep Research + DevSpace |
 | Web Multi-GPT | Web Multi-GPT | Independent parallel perspectives and merger | 2-25 Oracle sessions |
 | Local Multi-GPT | Local Multi-GPT | Local advisory synthesis and counterexample search | Fixed `gpt-5.6-luna` + `max`, read-only |
+| Luna continuous command | `$luna-web-supervisor` / continuous command mode | Serialize, verify, and record Web GPT implementation; return failed checks to Web GPT | Luna `high` supervisor + Oracle DevSpace Sol Extra High |
 | Comprehensive | comprehensive mode | Plan, optional Pro/Multi, review, implementation, gate | Staged Oracle workflow |
 | Pro | `pro` / Pro | Independent final judgment or design review; result only | Oracle attachments only |
 
@@ -145,6 +148,23 @@ python "$env:USERPROFILE\.codex\bin\chatgpt_oracle_dispatch.py" `
 ```
 
 Remove `--dry-run` only when the run is authorized.
+
+## Luna continuous command mode
+
+`$luna-web-supervisor` is an explicit route separate from the unchanged
+`$web-gpt` one-shot contract. The Codex task must be proven to run
+`gpt-5.6-luna` with `high` reasoning and may not edit product source. Luna
+serializes one Web GPT run at a time, recovers only its exact Oracle slug,
+checks the declared Git and test contract, and reads back the existing Notion
+record before advancing.
+
+On a remediable validation failure, Luna does not fix the code. It freezes the
+failure log, current commit, and allowed paths into a new remediation mission,
+records and reads back that attempt, then asks a new Web GPT run to diagnose,
+edit, test, and commit the correction. Per-unit `max_web_attempts` and the
+manifest's total submission ceiling prevent an unbounded loop. See
+[`skills/luna-web-supervisor/SKILL.md`](skills/luna-web-supervisor/SKILL.md)
+for the state transitions and exact commands.
 
 ## Pro example
 

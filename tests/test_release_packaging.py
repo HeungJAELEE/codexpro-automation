@@ -5,6 +5,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 
+LUNA_SUPERVISOR_MODULES = {
+    f'skills/luna-web-supervisor/scripts/{name}.py'
+    for name in (
+        'supervisor_core',
+        'supervisor_execution',
+        'supervisor_git',
+        'supervisor_manifest',
+        'supervisor_records',
+        'supervisor_remediation',
+        'supervisor_state',
+        'supervisor_store',
+        'supervisor_verification',
+    )
+}
+
 RETIRED_PATHS = {
     'bin/chatgpt_browser_runtime.py',
     'bin/chatgpt_browser_runtime_server.py',
@@ -61,12 +76,16 @@ def test_manifest_covers_runtime_and_schemas() -> None:
         'skills/chatgpt-pro-browser/scripts/run_chatgpt_pro.py',
         'skills/chatgpt-pro-plan-handoff/scripts/run_pro_plan_handoff.py',
         'skills/chatgpt-pro-plan-handoff/schemas/*.json',
+        'skills/luna-web-supervisor/SKILL.md',
+        'skills/luna-web-supervisor/agents/openai.yaml',
+        'skills/luna-web-supervisor/references/manifest.schema.json',
+        'skills/luna-web-supervisor/references/manifest.example.json',
         'scripts/run_v4_contract_tests.py',
         'contracts/install/*.json',
         'tests/fixtures/planner-v7-app-trace-quiescent-incident.json',
         'tests/fixtures/planner-v8-app-trace-quiescent-incident.json',
     }
-    assert required <= includes
+    assert required | LUNA_SUPERVISOR_MODULES <= includes
     assert not any('*' in path for path in includes if not (path.endswith('/schemas/*.json') or path == 'contracts/install/*.json'))
     package_files = set(json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))['files'])
     assert {
@@ -75,7 +94,11 @@ def test_manifest_covers_runtime_and_schemas() -> None:
         'skills/chatgpt-pro-browser/scripts/build_project_context_packet.py',
         'skills/chatgpt-pro-browser/scripts/run_chatgpt_pro.py',
         'skills/chatgpt-pro-browser/scripts/run_pro_browser.py',
-    } <= package_files
+        'skills/luna-web-supervisor/SKILL.md',
+        'skills/luna-web-supervisor/agents/openai.yaml',
+        'skills/luna-web-supervisor/references/manifest.schema.json',
+        'skills/luna-web-supervisor/references/manifest.example.json',
+    } | LUNA_SUPERVISOR_MODULES <= package_files
 
 
 def test_manifest_includes_every_declared_oracle_compatibility_patch() -> None:
@@ -148,6 +171,7 @@ def test_package_is_publishable_and_lockfile_matches() -> None:
     assert {
         'bin/chatgpt_agbrowse_bridge.py',
         'skills/chatgpt-thinking-browser/SKILL.md',
+        'skills/luna-web-supervisor/SKILL.md',
         'install.ps1',
         'LICENSE',
         'scripts/run_v4_contract_tests.py',

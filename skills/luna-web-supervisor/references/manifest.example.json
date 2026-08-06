@@ -1,0 +1,139 @@
+{
+  "schema": "codex.luna-web-supervisor/1",
+  "supervisor_id": "source-reconciliation-20260806",
+  "description": "Two-unit example. Replace every path, hash, unit, and record URL with the exact approved batch.",
+  "project_root": "C:\\projects\\example",
+  "role": "monitor-record-only",
+  "supervisor": {
+    "model": "gpt-5.6-luna",
+    "reasoning_effort": "high",
+    "source_writes": false
+  },
+  "web": {
+    "transport": "oracle-devspace",
+    "mode": "orchestrator",
+    "model": "GPT-5.6 Sol",
+    "dispatcher_reasoning_level": "Very High",
+    "visible_reasoning": "Extra High",
+    "concurrency": 1
+  },
+  "authorization": {
+    "request_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+    "authorized_at": "2026-08-06T09:00:00+09:00",
+    "expires_at": "2026-08-13T09:00:00+09:00",
+    "exact_unit_ids": [
+      "session-02",
+      "session-03"
+    ],
+    "live_submission_limit": 6,
+    "local_commit": true,
+    "push": false,
+    "deploy": false
+  },
+  "recording": {
+    "notion_required": true,
+    "project_checkpoint_dir": ".ai-bridge/luna-web-supervisor",
+    "targets": [
+      {
+        "kind": "notion",
+        "url": "https://app.notion.com/p/replace-with-approved-task-or-report",
+        "purpose": "Append the human-readable unit checkpoint and verify it by readback."
+      }
+    ]
+  },
+  "context_refs": [
+    {
+      "kind": "notion",
+      "url": "https://app.notion.com/p/replace-with-approved-canonical",
+      "purpose": "Canonical project policy needed by every unit."
+    }
+  ],
+  "units": [
+    {
+      "id": "session-02",
+      "description": "Restore and verify the first exact source-matching unit.",
+      "mission_path": ".ai-bridge/session-02.md",
+      "max_web_attempts": 3,
+      "context_refs": [],
+      "outcomes": [
+        {
+          "name": "completed",
+          "commit_policy": "required",
+          "expected_change_paths": [
+            "src/session-02.ts",
+            "tests/session-02.test.ts"
+          ],
+          "verification_commands": [
+            {
+              "name": "session-02-test",
+              "argv": [
+                "C:\\Program Files\\nodejs\\npm.cmd",
+                "test",
+                "--",
+                "session-02"
+              ],
+              "cwd": ".",
+              "timeout_seconds": 900,
+              "expected_exit_code": 0
+            }
+          ]
+        },
+        {
+          "name": "hold",
+          "commit_policy": "forbidden",
+          "expected_change_paths": [],
+          "verification_commands": []
+        },
+        {
+          "name": "choice_issue",
+          "commit_policy": "forbidden",
+          "expected_change_paths": [],
+          "verification_commands": []
+        }
+      ]
+    },
+    {
+      "id": "session-03",
+      "description": "Continue only after session-02 verification and record readback.",
+      "mission_path": ".ai-bridge/session-03.md",
+      "max_web_attempts": 3,
+      "context_refs": [],
+      "outcomes": [
+        {
+          "name": "completed",
+          "commit_policy": "required",
+          "expected_change_paths": [
+            "src/session-03.ts",
+            "tests/session-03.test.ts"
+          ],
+          "verification_commands": [
+            {
+              "name": "session-03-test",
+              "argv": [
+                "C:\\Program Files\\nodejs\\npm.cmd",
+                "test",
+                "--",
+                "session-03"
+              ],
+              "cwd": ".",
+              "timeout_seconds": 900,
+              "expected_exit_code": 0
+            }
+          ]
+        },
+        {
+          "name": "hold",
+          "commit_policy": "forbidden",
+          "expected_change_paths": [],
+          "verification_commands": []
+        },
+        {
+          "name": "choice_issue",
+          "commit_policy": "forbidden",
+          "expected_change_paths": [],
+          "verification_commands": []
+        }
+      ]
+    }
+  ]
+}

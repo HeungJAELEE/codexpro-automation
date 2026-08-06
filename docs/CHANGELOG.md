@@ -5,6 +5,18 @@ README는 현재 제품의 목적과 사용법만 설명합니다. 구현 변경
 
 ## 현재 릴리스
 
+### Luna 연속 지휘모드
+
+- 기존 `$web-gpt`를 변경하지 않고 명시 호출형 `$luna-web-supervisor`를
+  추가했습니다.
+- Luna는 제품 소스를 고치지 않고 직렬 Web GPT 제출·정확한 slug 복구·Git
+  경계 검증·선언된 테스트·Notion 기록과 readback만 담당합니다.
+- 검증 실패는 즉시 종료하지 않습니다. 실패 증거와 허용 파일을 고정한 개선
+  미션을 만든 뒤 Notion에 시도 내역을 기록하고, 남은 승인 횟수 안에서 새 Web
+  GPT 실행에 판단·수정·테스트·local commit을 다시 맡깁니다.
+- 단위별 `max_web_attempts`, 전체 제출 상한, 정확한 outcome별 net diff,
+  기록 완료 전 다음 단위 차단으로 무한 반복과 권한 확대를 막습니다.
+
 ### Oracle 호환 패치 설치 무결성
 
 - Windows 전역 설치 manifest가 Oracle 호환 계층에 선언된 모든 패치 파일을

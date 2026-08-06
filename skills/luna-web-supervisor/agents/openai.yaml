@@ -1,0 +1,7 @@
+interface:
+  display_name: "Luna Web Supervisor"
+  short_description: "웹 GPT 작업을 감시·검증·기록하며 순차 진행"
+  default_prompt: "Use $luna-web-supervisor to supervise an explicitly bounded sequence of Web GPT work without editing product source."
+
+policy:
+  allow_implicit_invocation: false

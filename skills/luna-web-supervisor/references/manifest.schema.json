@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ventianima-lab/codexpro-automation/schemas/luna-web-supervisor-manifest-v1.json",
+  "title": "Luna Web Supervisor Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "supervisor_id",
+    "project_root",
+    "role",
+    "supervisor",
+    "web",
+    "authorization",
+    "recording",
+    "units"
+  ],
+  "properties": {
+    "schema": {
+      "const": "codex.luna-web-supervisor/1"
+    },
+    "supervisor_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,79}$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "project_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "const": "monitor-record-only"
+    },
+    "supervisor": {
+      "const": {
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "high",
+        "source_writes": false
+      }
+    },
+    "web": {
+      "const": {
+        "transport": "oracle-devspace",
+        "mode": "orchestrator",
+        "model": "GPT-5.6 Sol",
+        "dispatcher_reasoning_level": "Very High",
+        "visible_reasoning": "Extra High",
+        "concurrency": 1
+      }
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_fingerprint",
+        "authorized_at",
+        "expires_at",
+        "exact_unit_ids",
+        "live_submission_limit",
+        "local_commit",
+        "push",
+        "deploy"
+      ],
+      "properties": {
+        "request_fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "authorized_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "exact_unit_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,79}$"
+          }
+        },
+        "live_submission_limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "local_commit": {
+          "type": "boolean"
+        },
+        "push": {
+          "const": false
+        },
+        "deploy": {
+          "const": false
+        }
+      }
+    },
+    "recording": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "notion_required",
+        "targets",
+        "project_checkpoint_dir"
+      ],
+      "properties": {
+        "notion_required": {
+          "type": "boolean"
+        },
+        "targets": {
+          "$ref": "#/$defs/contextRefs"
+        },
+        "project_checkpoint_dir": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "context_refs": {
+      "$ref": "#/$defs/contextRefs"
+    },
+    "units": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "$ref": "#/$defs/unit"
+      }
+    }
+  },
+  "$defs": {
+    "contextRefs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "url",
+          "purpose"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "notion",
+              "web"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mission_path",
+        "max_web_attempts",
+        "outcomes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,79}$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "mission_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "max_web_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "context_refs": {
+          "$ref": "#/$defs/contextRefs"
+        },
+        "outcomes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/outcome"
+          }
+        }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "commit_policy",
+        "expected_change_paths",
+        "verification_commands"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "completed",
+            "hold",
+            "choice_issue"
+          ]
+        },
+        "commit_policy": {
+          "enum": [
+            "required",
+            "optional",
+            "forbidden"
+          ]
+        },
+        "expected_change_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "verification_commands": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/verificationCommand"
+          }
+        }
+      }
+    },
+    "verificationCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "argv",
+        "timeout_seconds",
+        "expected_exit_code"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,79}$"
+        },
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cwd": {
+          "type": "string",
+          "default": "."
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "expected_exit_code": {
+          "type": "integer",
+          "minimum": -255,
+          "maximum": 255
+        }
+      }
+    }
+  }
+}
