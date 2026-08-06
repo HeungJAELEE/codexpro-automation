@@ -1,6 +1,6 @@
 {
   "schema": "codexpro.install-manifest/v1",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "include": [
     "bin/chatgpt_agbrowse_bridge.py",
     "bin/chatgpt_agbrowse_composer.py",
@@ -50,6 +50,8 @@
     "skills/chatgpt-thinking-browser/agents/openai.yaml",
     "skills/chatgpt-thinking-browser/scripts/run_chatgpt_thinking.py",
     "skills/chatgpt-thinking-browser/scripts/run_thinking_browser.py",
+    "skills/web-gpt/SKILL.md",
+    "skills/web-gpt/agents/openai.yaml",
     "skills/chatgpt-pro-browser/SKILL.md",
     "skills/chatgpt-pro-browser/agents/openai.yaml",
     "skills/chatgpt-pro-browser/scripts/build_project_context_packet.py",
