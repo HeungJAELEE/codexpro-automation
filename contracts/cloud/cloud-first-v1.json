@@ -1,0 +1,31 @@
+{
+  "schema": "codexpro.cloud-first/v1",
+  "default_lane": "codex-cloud",
+  "source_of_truth": "github",
+  "task_result": "branch-or-pull-request",
+  "cloud_lane": {
+    "host_dependency": "none",
+    "checkout_source": "github-branch-or-commit",
+    "agent_internet": "off-by-default",
+    "secrets": "environment-setup-only",
+    "required_gates": [
+      "repository-agents-loaded",
+      "declared-tests-pass",
+      "diff-reviewed",
+      "remote-branch-pushed",
+      "ci-observed"
+    ]
+  },
+  "local_lane": {
+    "status": "optional-explicit-only",
+    "host_dependency": "awake-and-online",
+    "allowed_uses": [
+      "unpublished-local-files",
+      "signed-in-desktop-apps",
+      "exact-persisted-run-recovery"
+    ]
+  },
+  "dirty_worktree_policy": "synchronize-to-explicit-backup-branch-or-block",
+  "completion_policy": "remote-evidence-only",
+  "bridge_role": "optional-local-adapter"
+}

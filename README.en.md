@@ -2,23 +2,29 @@
 
 English | [한국어](README.md)
 
-A Windows automation toolkit that delegates planning, research, review, code
-changes, and testing to web ChatGPT while keeping local Codex work focused on
-transport, recovery, identity, hashes, and the final deterministic gate.
+A cloud-first operations toolkit that uses GitHub as the source of truth and
+Codex Cloud for planning, changes, tests, and pull requests. The default execution lane is Codex Cloud,
+so repository work can continue when the PC is off.
 
-It connects two upstream tools:
+The existing Windows Oracle and DevSpace automation remains available as an
+explicit local-only lane for unpublished local files, signed-in desktop apps,
+and exact recovery of persisted runs.
+
+The optional local lane connects two upstream tools:
 
 - [Oracle](https://github.com/steipete/oracle) creates signed-in ChatGPT browser
   sessions, selects the model, waits for the response, and harvests the result.
 - [DevSpace](https://github.com/Waishnav/devspace) lets ChatGPT read, edit, and
   run commands only inside project roots approved by the user.
 
-Regular GPT runs send one line containing `@DevSpace` and the absolute UTF-8
-mission-file path. Pro runs do not use DevSpace; they use exact, hash-frozen
-attachments through Oracle.
+Regular cloud work starts from a GitHub branch or commit and returns a
+reviewable diff and pull request. Only an explicitly selected local run sends
+`@DevSpace` and an absolute UTF-8 mission-file path through Oracle.
 
 ## What it provides
 
+- PC-independent checkout, changes, tests, pull requests, and CI evidence.
+- Fail-closed migration of a local dirty tree to an explicit backup branch.
 - Web GPT can inspect, change, and test a local project.
 - Luna can supervise, verify, and record serialized Web GPT implementation and
   send failed checks back to Web GPT for remediation.
@@ -36,22 +42,22 @@ attachments through Oracle.
 
 ```text
 User request
-    -> Codex writes a UTF-8 mission and manifest
-    -> Oracle starts a signed-in ChatGPT session
-       |-- regular GPT: @DevSpace + mission path
-       `-- Pro: mission + hash-frozen attachments
-    -> web GPT explores, plans, edits, and tests
-    -> Oracle saves the answer as a local artifact
-    -> Codex checks identity, hashes, and one deterministic final gate
+    -> select an exact GitHub branch or commit
+    -> Codex Cloud checks out the repo and loads AGENTS.md
+    -> explore, edit, test, and review the diff in the cloud
+    -> push a dedicated branch and open a pull request
+    -> observe CI on the exact commit
 ```
 
-Host state and ChatGPT output are stored outside DevSpace projects under
+Tasks that require local-only bytes or desktop sessions branch to Oracle +
+DevSpace. State for that optional lane is stored outside DevSpace projects under
 `%USERPROFILE%\.codex\state\chatgpt-oracle`.
 
 ## Modes and English invocation names
 
 | Mode | CLI / natural-language name | Purpose | Transport |
 |---|---|---|---|
+| Cloud default | Codex Cloud / Cloud Work | Repository planning, implementation, tests, and PR | GitHub + isolated cloud environment |
 | Regular GPT | `direct` / GPT | Questions, analysis, and small tasks | Oracle + DevSpace |
 | Plan | `plan` / plan | Design before implementation | Oracle + DevSpace, read-only |
 | Review | `review` / review | Independent code or plan review | Oracle + DevSpace, read-only |
@@ -80,7 +86,18 @@ fixed to `gpt-5.6-luna` with `max` reasoning; any other model or effort is
 rejected before a child process starts. Web Multi-GPT instead runs independent
 ChatGPT web sessions through Oracle and merges their results.
 
+Every Oracle mode in this table is part of the optional local lane. A failed
+cloud task must not silently fall back to the user's PC.
+
 ## Requirements
+
+Cloud default lane:
+
+- A GitHub-synchronized repository
+- A Codex Cloud environment with access to that repository
+- Repository `AGENTS.md` plus cloud-compatible tests and CI
+
+Optional local lane:
 
 - Windows 11
 - Python
@@ -94,7 +111,7 @@ The validated combination is Oracle `0.16.1` and DevSpace `1.0.4`. The installer
 applies Windows compatibility patches only when exact upstream file hashes
 match.
 
-## Install
+## Install the optional Windows lane
 
 ```powershell
 git clone https://github.com/ventianima-lab/codexpro-automation.git
@@ -106,7 +123,7 @@ cd codexpro-automation
 The installer backs up replaced files and writes durable install receipts under
 `%USERPROFILE%\.codex\receipts`.
 
-## One-time DevSpace setup
+## Optional one-time DevSpace setup
 
 You do not install one ChatGPT app per project. Register one DevSpace app and
 add each permitted project as another `--root` argument.
@@ -229,6 +246,7 @@ already persisted legacy run.
 
 ## Documentation
 
+- [PC-independent cloud-first operations](docs/CLOUD_FIRST_OPERATIONS.md)
 - [Global ChatGPT routing and mode selection](docs/GLOBAL_CHATGPT_ROUTING.md)
 - [DevSpace and Tailscale setup](docs/DEVSPACE_TAILSCALE_SETUP.md)
 - [Technical changelog](docs/CHANGELOG.md)

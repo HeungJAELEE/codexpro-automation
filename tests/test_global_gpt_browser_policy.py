@@ -155,9 +155,10 @@ def test_install_inventory_contains_new_active_runtime_and_keeps_legacy_recovery
         assert path in include
     assert "bin/chatgpt_agbrowse_run.py" in include
     assert manifest["routing"] == {
-        "new_work_engine": "oracle",
-        "regular_workspace_transport": "devspace",
-        "pro_transport": "oracle-attachment-only",
+        "new_work_engine": "codex-cloud",
+        "regular_workspace_transport": "github",
+        "local_workspace_transport": "oracle-devspace-explicit-only",
+        "pro_transport": "codex-cloud-default-or-explicit-oracle-local",
         "agbrowse": "persisted-run-recovery-only",
         "codexpro": "persisted-run-recovery-only",
     }

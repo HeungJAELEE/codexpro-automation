@@ -5,6 +5,17 @@ README는 현재 제품의 목적과 사용법만 설명합니다. 구현 변경
 
 ## 현재 릴리스
 
+### GitHub + Codex Cloud 기본 실행 경로
+
+- GitHub commit/branch를 저장소 정본으로 사용하고 Codex Cloud를 신규
+  repository 작업의 기본 실행 경로로 승격했습니다.
+- Oracle·DevSpace·CodexPro Bridge·Tailscale은 로컬 미공개 파일, 로그인된
+  데스크톱 앱, persisted run 복구를 위한 명시적 로컬 경로로 격리했습니다.
+- dirty working tree는 명시적 backup branch로 안전하게 동기화하거나
+  차단하며, cloud가 누락 바이트를 추정하지 않습니다.
+- Linux CI에서 cloud routing contract와 PC 비의존성을 검사하고, 실제 완료는
+  원격 branch/PR 및 exact commit CI로만 판정합니다.
+
 ### Oracle 지휘 라우트와 제출 전 복구
 
 - Oracle 하위 실행기의 `mode=browser`와 dispatcher의 의미 계약

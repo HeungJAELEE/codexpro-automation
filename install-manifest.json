@@ -1,6 +1,6 @@
 {
   "schema": "codexpro.install-manifest/v1",
-  "version": "1.7.2",
+  "version": "1.8.0",
   "include": [
     "bin/chatgpt_agbrowse_bridge.py",
     "bin/chatgpt_agbrowse_composer.py",
@@ -96,6 +96,8 @@
     "scripts/run_v4_contract_tests.py",
     "scripts/run_fast_gate.py",
     "scripts/run_golden_path_smoke.py",
+    "scripts/validate_cloud_first.py",
+    "contracts/cloud/cloud-first-v1.json",
     "contracts/install/*.json",
     "tests/fixtures/planner-v7-app-trace-quiescent-incident.json",
     "tests/fixtures/planner-v8-app-trace-quiescent-incident.json",
@@ -105,9 +107,10 @@
     "skills/mcp-update-guard/agents/openai.yaml"
   ],
   "routing": {
-    "new_work_engine": "oracle",
-    "regular_workspace_transport": "devspace",
-    "pro_transport": "oracle-attachment-only",
+    "new_work_engine": "codex-cloud",
+    "regular_workspace_transport": "github",
+    "local_workspace_transport": "oracle-devspace-explicit-only",
+    "pro_transport": "codex-cloud-default-or-explicit-oracle-local",
     "agbrowse": "persisted-run-recovery-only",
     "codexpro": "persisted-run-recovery-only"
   },

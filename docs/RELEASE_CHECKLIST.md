@@ -1,8 +1,21 @@
 # Release checklist
 
-New submissions use Oracle only. CodexPro and agbrowse checks below apply only
-to packaging integrity and exact recovery of already-persisted legacy runs;
-they are not active routing prerequisites.
+Repository-backed new work uses GitHub and Codex Cloud by default. Oracle and
+DevSpace are an explicit local-only lane. CodexPro and agbrowse checks below
+apply only to packaging integrity and exact recovery of already-persisted
+legacy runs; they are not active cloud routing prerequisites.
+
+- Run `python scripts/validate_cloud_first.py --root .` and
+  `python -m pytest -q tests/test_cloud_first_contract.py` on Linux without
+  Tailscale, a browser profile, a local Bridge, or an OpenAI API key.
+- Confirm the cloud job checks out the exact commit and runs on
+  `ubuntu-latest`. Its success proves repository portability, not a production
+  deployment or a configured Codex Cloud account environment.
+- Confirm `contracts/cloud/cloud-first-v1.json`, `AGENTS.md`, both READMEs, and
+  the routing manifest agree on GitHub authority, Codex Cloud default, explicit
+  local-only scope, dirty-tree fail-closed behavior, and remote evidence.
+- Perform the PC-off acceptance in `CLOUD_FIRST_OPERATIONS.md` for each target
+  repository before claiming that repository is independent of the host.
 
 The default installer must leave both frozen dependencies untouched.
 `-InstallLegacyRecoveryDependency` is the only opt-in that may install or
