@@ -7,9 +7,17 @@
 - Public-safe reusable changes must be committed to the clean public `main`, pushed, and checked in CI. Never copy credentials, host-only values, sensitive artifacts, or private Git history into this repository.
 - Never push a private-history development branch to the public repository. If commit, push, or CI verification is blocked, report the exact dirty files and blocker and do not claim completion.
 
-## Comprehensive-mode ownership
+## Cloud-first ownership
 
-- Every new ChatGPT submission uses Oracle. Regular GPT uses the manually registered DevSpace app; Pro uses Oracle attachment-only and never selects an app.
+- GitHub is the source of truth for every repository-backed task. Codex Cloud is the default execution lane, and a remote branch or pull request plus observed CI is the durable result.
+- A cloud task starts from one exact GitHub branch or commit, loads the applicable `AGENTS.md` chain, runs declared tests, reviews the diff, pushes a dedicated branch, and observes CI on the exact commit before completion.
+- Cloud work must not infer unpublished local bytes. A dirty local working tree must be synchronized to an explicit backup branch without secrets or machine-only artifacts, or the task must block or stay local.
+- Oracle, DevSpace, CodexPro Bridge, Tailscale, signed-in desktop browsers, and local Codex lanes form an explicit local-only lane. Use it only when the user explicitly needs unpublished local files, signed-in desktop apps, or exact persisted-run recovery.
+- Local Bridge, Funnel, Worker, browser, or host health is not cloud completion evidence. The cloud lane must remain usable when that host is offline.
+
+## Explicit local-only lane ownership
+
+- When the explicit local-only lane is selected, every new browser submission uses Oracle. Regular GPT uses the manually registered DevSpace app; Pro uses Oracle attachment-only and never selects an app.
 - New GPT comprehensive workflows use `codex.chatgpt.oracle-comprehensive/v1`. Existing CodexPro/agbrowse comprehensive v1-v4 state remains exact recovery-only.
 - The completing web GPT stage authors the next stage's semantic prompt. Local Codex may validate UTF-8, hashes, stage identity, immutable bindings, transport, recovery, and deterministic final tests, but must not rewrite the next prompt or take over expensive exploration/implementation.
 - A selected Web Multi advisory uses genuine independent Oracle sessions. Provider generation is limited to at most five concurrent children; larger accepted topologies run in capacity waves without reducing their logical lane count.

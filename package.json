@@ -1,8 +1,8 @@
 {
   "name": "codexpro-automation",
-  "version": "1.7.2",
+  "version": "1.8.0",
   "private": false,
-  "description": "Windows orchestrator that delegates Codex planning, research, implementation, and review to web ChatGPT through Oracle and DevSpace",
+  "description": "Cloud-first GitHub and Codex operations with an optional Windows Oracle and DevSpace lane",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -107,6 +107,8 @@
     "scripts/run_v4_contract_tests.py",
     "scripts/run_fast_gate.py",
     "scripts/run_golden_path_smoke.py",
+    "scripts/validate_cloud_first.py",
+    "contracts/cloud/",
     "contracts/install/",
     "tests/fixtures/planner-v7-app-trace-quiescent-incident.json",
     "tests/fixtures/planner-v8-app-trace-quiescent-incident.json",

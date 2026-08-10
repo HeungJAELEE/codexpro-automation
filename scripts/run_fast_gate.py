@@ -21,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 FAST_TARGETS = [
+    "tests/test_cloud_first_contract.py",
     "tests/test_chatgpt_oracle_state.py",
     "tests/test_chatgpt_oracle_run.py",
     "tests/test_chatgpt_oracle_diagnose.py",

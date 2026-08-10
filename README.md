@@ -2,21 +2,29 @@
 
 한국어 | [English](README.en.md)
 
-Codex가 웹 ChatGPT에 계획·리서치·검토·코드 구현을 맡기고, 로컬 Codex는
-제출·복구·해시·최종 테스트만 담당하도록 만드는 Windows용 자동화 도구입니다.
+GitHub를 정본으로 삼아 Codex Cloud가 계획·구현·테스트·PR을 수행하는
+cloud-first 운영 도구입니다. 기본 실행 경로는 Codex Cloud이며 PC가 꺼져 있어도
+저장소 작업을 계속할 수 있습니다.
 
-이 프로젝트는 다음 두 도구를 연결합니다.
+기존 Windows Oracle·DevSpace 자동화는 삭제하지 않습니다. 원격에 없는 로컬
+파일, 로그인된 데스크톱 앱, 과거 실행의 정확한 복구가 필요할 때만 사용하는
+명시적 로컬 보조 경로입니다.
+
+선택적 로컬 경로는 다음 두 도구를 연결합니다.
 
 - [Oracle](https://github.com/steipete/oracle): 로그인된 ChatGPT 브라우저
   세션 생성, 모델 선택, 응답 대기와 결과 회수
 - [DevSpace](https://github.com/Waishnav/devspace): 사용자가 허용한 로컬
   프로젝트의 파일 읽기·쓰기와 명령 실행
 
-일반 GPT 작업은 Oracle이 `@DevSpace`와 미션 파일 경로를 ChatGPT에
-전달합니다. Pro 작업은 DevSpace 없이 정확한 첨부 파일만 사용합니다.
+일반 cloud 작업은 GitHub branch/commit에서 시작해 검토 가능한 diff와 PR을
+남깁니다. 로컬 GPT 작업을 명시적으로 선택한 경우에만 Oracle이 `@DevSpace`와
+미션 파일 경로를 ChatGPT에 전달합니다.
 
 ## 이 도구로 할 수 있는 일
 
+- PC 없이 GitHub 저장소를 checkout하고 수정·테스트·PR·CI 검증
+- 로컬 dirty working tree를 명시적 백업 브랜치로 이관하거나 안전하게 차단
 - 웹 GPT가 로컬 프로젝트를 읽고 직접 수정·테스트
 - Luna가 웹 GPT의 연속 구현을 감시·검증·기록하고 실패를 다시 웹에 보내 개선
 - 계획, 검토, 수정, 지휘, 심층 리서치 모드
@@ -33,26 +41,26 @@ Codex가 웹 ChatGPT에 계획·리서치·검토·코드 구현을 맡기고, �
 ```text
 사용자 요청
     ↓
-Codex가 UTF-8 미션 파일과 실행 manifest 작성
+GitHub의 정확한 branch/commit 선택
     ↓
-Oracle이 로그인된 ChatGPT 세션 실행
-    ├─ 일반 GPT: @DevSpace + 미션 경로
-    └─ Pro: 미션 + 고정 해시 첨부 파일
+Codex Cloud 환경이 저장소 checkout + AGENTS.md 로드
     ↓
-웹 GPT가 프로젝트 탐색·계획·구현·테스트
+Cloud에서 탐색·수정·테스트·diff 검토
     ↓
-Oracle이 결과를 로컬 파일로 회수
+전용 branch push + Pull Request
     ↓
-Codex가 해시·상태·최종 결정론적 테스트만 확인
+정확한 commit의 CI 확인
 ```
 
-호스트 상태와 ChatGPT 출력은 DevSpace 프로젝트 밖의
+로컬 전용 파일이나 데스크톱 세션이 필요한 작업만 Oracle + DevSpace 경로로
+분기합니다. 이 경로의 호스트 상태와 ChatGPT 출력은 DevSpace 프로젝트 밖의
 `%USERPROFILE%\.codex\state\chatgpt-oracle`에 저장됩니다.
 
 ## 모드
 
 | 모드 | CLI/영어 이름 | 용도 | 실행 방식 |
 |---|---|---|---|
+| Cloud 기본 | Codex Cloud / Cloud Work | 저장소 기반 계획·구현·테스트·PR | GitHub + 격리 cloud 환경 |
 | 일반 GPT | `direct` / GPT | 질문·분석·작은 작업 | Oracle + DevSpace, 단일 세션 |
 | 계획 | `plan` / plan | 구현 전 설계 | Oracle + DevSpace, 읽기 전용 |
 | 검토 | `review` / review | 코드·계획의 독립 검토 | Oracle + DevSpace, 읽기 전용 |
@@ -79,7 +87,18 @@ PC의 Codex 하위 레인을 사용하는 선택적 자문 도구이며, 모든 
 레벨을 요청하면 하위 프로세스를 시작하기 전에 거부합니다. Web Multi-GPT는
 Oracle이 여러 독립 ChatGPT 웹 세션을 실행한 뒤 결과를 병합합니다.
 
+위 표에서 Oracle 기반 모드는 모두 선택적 로컬 경로입니다. cloud 실패를
+로컬 경로로 자동 우회하지 않습니다.
+
 ## 요구사항
+
+Cloud 기본 경로:
+
+- GitHub에 동기화된 저장소
+- 해당 저장소에 접근 가능한 Codex Cloud 환경
+- 저장소별 `AGENTS.md`와 cloud-compatible test/CI
+
+선택적 로컬 경로:
 
 - Windows 11
 - Python
@@ -92,7 +111,7 @@ Oracle이 여러 독립 ChatGPT 웹 세션을 실행한 뒤 결과를 병합합�
 현재 검증된 조합은 Oracle `0.16.1`과 DevSpace `1.0.4`입니다. 설치기는
 정확한 파일 해시가 일치할 때만 Windows 호환 패치를 적용합니다.
 
-## 설치
+## 선택적 Windows 경로 설치
 
 ```powershell
 git clone https://github.com/ventianima-lab/codexpro-automation.git
@@ -104,7 +123,7 @@ cd codexpro-automation
 설치기는 기존 파일을 백업하고
 `%USERPROFILE%\.codex\receipts`에 설치 영수증을 남깁니다.
 
-## DevSpace 최초 연결
+## 선택적 DevSpace 최초 연결
 
 DevSpace 앱은 프로젝트마다 설치하는 것이 아닙니다. 앱 하나에 허용할
 프로젝트 루트를 여러 번 `--root`로 지정합니다.
@@ -224,6 +243,7 @@ python "$env:USERPROFILE\.codex\bin\chatgpt_oracle_run.py" recover `
 
 ## 문서
 
+- [PC 독립 Cloud-first 운영](docs/CLOUD_FIRST_OPERATIONS.md)
 - [전역 ChatGPT 라우팅과 모드 선택](docs/GLOBAL_CHATGPT_ROUTING.md)
 - [DevSpace + Tailscale 최초 설정](docs/DEVSPACE_TAILSCALE_SETUP.md)
 - [기술 변경 기록](docs/CHANGELOG.md)

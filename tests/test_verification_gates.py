@@ -25,6 +25,7 @@ def test_fast_gate_targets_exist_and_cover_the_pre_submit_contracts() -> None:
         assert (ROOT / target).is_file(), target
 
     covered = set(gate.FAST_TARGETS)
+    assert "tests/test_cloud_first_contract.py" in covered
     # The buckets that actually blocked runs before submission must be gated.
     assert "tests/test_chatgpt_oracle_state.py" in covered
     assert "tests/test_chatgpt_oracle_run.py" in covered
@@ -91,6 +92,8 @@ def test_ci_workflow_runs_the_fast_gate_and_golden_path_smoke() -> None:
     # The fast gate must run before the long suite so a broken launch contract
     # fails in seconds instead of minutes.
     assert workflow.index("run_fast_gate.py") < workflow.index("run_v4_contract_tests.py --full")
+    assert "cloud-first:" in workflow
+    assert "scripts/validate_cloud_first.py" in workflow
 
 
 def test_release_manifest_ships_the_new_verification_scripts() -> None:
@@ -99,3 +102,7 @@ def test_release_manifest_ships_the_new_verification_scripts() -> None:
 
     assert "bin/chatgpt_oracle_incident.py" in manifest["include"]
     assert "bin/chatgpt_oracle_incident.py" in package["files"]
+    assert "scripts/validate_cloud_first.py" in manifest["include"]
+    assert "scripts/validate_cloud_first.py" in package["files"]
+    assert "contracts/cloud/cloud-first-v1.json" in manifest["include"]
+    assert "contracts/cloud/" in package["files"]

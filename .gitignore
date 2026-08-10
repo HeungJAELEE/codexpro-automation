@@ -13,6 +13,7 @@ node_modules/
 /Microsoft/Windows/PowerShell/ModuleAnalysisCache
 
 # Runtime / browser state
+codexpro-oracle-submit-*.lock
 data/
 profile/
 state/
