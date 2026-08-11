@@ -1,0 +1,8 @@
+{
+  "service": "codexpro-automation-control-plane",
+  "status": "bootstrap_ready",
+  "deploymentProvider": "cloudflare-workers-static-assets",
+  "runtimeAttached": false,
+  "gitWriteAttached": false,
+  "oracleDevSpaceAttached": false
+}
